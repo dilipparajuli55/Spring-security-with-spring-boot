@@ -2,6 +2,7 @@ package com.dbakdev.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -26,9 +27,15 @@ public class ApplicationSecurityConfig{
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+        		.csrf().disable() 
                 .authorizeHttpRequests()
                 .antMatchers("/",  "index", "/css/*", "/js/*" ).permitAll()
 				.antMatchers("/api/**").hasRole(ApplicationUserRole.ADMIN.name())
+				.antMatchers(HttpMethod.GET, "/management/apt/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.name())
+				.antMatchers(HttpMethod.POST, "/management/apt/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.name())
+				.antMatchers(HttpMethod.DELETE, "/management/apt/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.name())
+				.antMatchers(HttpMethod.PUT, "/management/apt/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.name())
+				.antMatchers("/management/apt/**").hasAnyRole(ApplicationUserRole.ADMIN.name(), ApplicationUserRole.ADMIN_TRAINEE.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -50,9 +57,14 @@ public class ApplicationSecurityConfig{
 									    		.password(passwordEncoder.encode("password1234"))
 									    		.roles(ApplicationUserRole.ADMIN.name())
 									    		.build();
+	   // Admin trainee with limited permission
+		UserDetails sisanUser = User.builder().username("sisanparajuli")
+				.password(passwordEncoder.encode("sisan1234"))
+				.roles(ApplicationUserRole.ADMIN_TRAINEE.name())
+				.build();
 		   
     	return new InMemoryUserDetailsManager(
-    				rojiUser, dilipUser
+    				rojiUser, dilipUser, sisanUser
     			);
     }
 
